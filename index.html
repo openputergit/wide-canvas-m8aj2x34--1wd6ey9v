@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Batch Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .primary-bg { background-color: #002aff; }
+        .secondary-bg { background-color: #eeff00; }
+        .primary-text { color: #002aff; }
+        .secondary-text { color: #eeff00; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .active-tab {
+            background-color: #002aff;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background-color: #002aff;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0020cc;
+        }
+        
+        .btn-secondary {
+            background-color: #eeff00;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #ccdd00;
+        }
+        
+        @media (max-width: 768px) {
+            .responsive-table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="primary-bg p-4 text-white shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="https://firebasestorage.googleapis.com/v0/b/widecanvas-d0dd4.appspot.com/o/additional-images%2Fimages%20(1).png?alt=media&token=220fdb03-cf58-4307-b006-84955905479d" alt="Logo" class="h-10 w-auto">
+                <h1 class="text-2xl font-bold">Student Batch Management System</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4">
+        <div class="mb-4">
+            <div class="flex flex-wrap space-x-2">
+                <button onclick="showTab('student')" class="px-4 py-2 rounded active-tab" id="studentTab">Student Management</button>
+                <button onclick="showTab('batch')" class="px-4 py-2 rounded" id="batchTab">Batch Management</button>
+                <button onclick="showTab('attendance')" class="px-4 py-2 rounded" id="attendanceTab">Attendance</button>
+            </div>
+        </div>
+
+        <!-- Student Management Section -->
+        <div id="studentSection" class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between mb-4 flex-wrap">
+                <h2 class="text-xl font-bold">Student Details</h2>
+                <button onclick="openAddStudentModal()" class="btn-primary px-4 py-2 rounded flex items-center">
+                    <i class="bi bi-plus-circle mr-2"></i> Add Student
+                </button>
+            </div>
+            
+            <div class="mb-4 flex flex-wrap gap-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Filter by Course:</label>
+                    <select id="courseFilter" onchange="applyFilters()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <option value="">All Courses</option>
+                        <option value="MS-CIT">MS-CIT</option>
+                        <option value="KLIC Courses">KLIC Courses</option>
+                        <option value="Adv. Excel">Adv. Excel</option>
+                        <option value="MS-Office">MS-Office</option>
+                        <option value="Tally Prime & Advance Tally">Tally Prime & Advance Tally</option>
+                        <option value="UDFA (without MS-CIT)">UDFA (without MS-CIT)</option>
+                        <option value="UDFA with MS-CIT">UDFA with MS-CIT</option>
+                        <option value="Power BI">Power BI</option>
+                        <option value="Graphics Designing">Graphics Designing</option>
+                        <option value="Advance Graphics Designing">Advance Graphics Designing</option>
+                        <option value="UDCA - Diploma Course">UDCA - Diploma Course</option>
+                        <option value="UCOA - Advance UDFA with Power-BI">UCOA - Advance UDFA with Power-BI</option>
+                        <option value="UDFA - Advanced">UDFA - Advanced</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Filter by Status:</label>
+                    <select id="statusFilter" onchange="applyFilters()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <option value="">All Status</option>
+                        <option value="Running">Running</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Hold">Hold</option>
+                        <option value="Left">Left</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto responsive-table">
+                <table class="w-full min-w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="p-2 text-left">Student ID</th>
+                            <th class="p-2 text-left">Name</th>
+                            <th class="p-2 text-left">Course</th>
+                            <th class="p-2 text-left">Status</th>
+                            <th class="p-2 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Batch Management Section -->
+        <div id="batchSection" class="bg-white rounded-lg shadow p-6 hidden">
+            <div class="flex justify-between mb-4 flex-wrap">
+                <h2 class="text-xl font-bold">Batch Details</h2>
+                <div>
+                    <label class="mr-2">Select Batch:</label>
+                    <select id="batchSelect" onchange="loadSelectedBatch()" class="border p-2 rounded">
+                        <option value="08 TO 09AM">08 TO 09AM</option>
+                        <option value="09 TO 10AM">09 TO 10AM</option>
+                        <option value="10 TO 11AM">10 TO 11AM</option>
+                        <option value="11 TO 12AM">11 TO 12AM</option>
+                        <option value="12 TO 01PM">12 TO 01PM</option>
+                        <option value="01 TO 02PM">01 TO 02PM</option>
+                        <option value="02 TO 03PM">02 TO 03PM</option>
+                        <option value="03 TO 04PM">03 TO 04PM</option>
+                        <option value="04 TO 05PM">04 TO 05PM</option>
+                        <option value="05 TO 06PM">05 TO 06PM</option>
+                        <option value="06 TO 07PM">06 TO 07PM</option>
+                        <option value="07 TO 08PM">07 TO 08PM</option>
+                        <option value="08 TO 09PM">08 TO 09PM</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="my-4">
+                <button onclick="openAddToBatchModal()" class="btn-primary px-4 py-2 rounded">
+                    <i class="bi bi-plus-circle mr-2"></i> Add Student to Batch
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto responsive-table">
+                <table class="w-full min-w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="p-2 text-left">Sr. No.</th>
+                            <th class="p-2 text-left">Student ID</th>
+                            <th class="p-2 text-left">Student Name</th>
+                            <th class="p-2 text-left">Course</th>
+                            <th class="p-2 text-left">Topic</th>
+                            <th class="p-2 text-left">Faculty</th>
+                            <th class="p-2 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchStudentsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Attendance Section -->
+        <div id="attendanceSection" class="bg-white rounded-lg shadow p-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Mark Attendance</h2>
+            
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2">Date:</label>
+                    <input type="date" id="attendanceDate" class="border p-2 rounded w-full" required>
+                </div>
+                <div>
+                    <label class="block mb-2">Select Batch:</label>
+                    <select id="attendanceBatchSelect" onchange="loadBatchForAttendance()" class="border p-2 rounded w-full">
+                        <option value="08 TO 09AM">08 TO 09AM</option>
+                        <option value="09 TO 10AM">09 TO 10AM</option>
+                        <option value="10 TO 11AM">10 TO 11AM</option>
+                        <option value="11 TO 12AM">11 TO 12AM</option>
+                        <option value="12 TO 01PM">12 TO 01PM</option>
+                        <option value="01 TO 02PM">01 TO 02PM</option>
+                        <option value="02 TO 03PM">02 TO 03PM</option>
+                        <option value="03 TO 04PM">03 TO 04PM</option>
+                        <option value="04 TO 05PM">04 TO 05PM</option>
+                        <option value="05 TO 06PM">05 TO 06PM</option>
+                        <option value="06 TO 07PM">06 TO 07PM</option>
+                        <option value="07 TO 08PM">07 TO 08PM</option>
+                        <option value="08 TO 09PM">08 TO 09PM</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto responsive-table">
+                <table class="w-full min-w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="p-2 text-left">Student ID</th>
+                            <th class="p-2 text-left">Name</th>
+                            <th class="p-2 text-left">Course</th>
+                            <th class="p-2 text-left">Topic</th>
+                            <th class="p-2 text-left">Present</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTable"></tbody>
+                </table>
+            </div>
+            <button onclick="saveAttendance()" class="btn-primary px-4 py-2 rounded mt-4">
+                <i class="bi bi-save mr-2"></i> Save Attendance
+            </button>
+        </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div id="studentModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md mx-auto mt-20">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold">Add Student</h2>
+                <button onclick="closeModal('studentModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <form id="studentForm" onsubmit="saveStudent(event)">
+                <input type="hidden" id="studentId">
+                <div class="mb-4">
+                    <label class="block mb-2">Name</label>
+                    <input type="text" id="studentName" class="w-full border p-2 rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2">Course</label>
+                    <select id="studentCourse" class="w-full border p-2 rounded" required>
+                        <option value="MS-CIT">MS-CIT</option>
+                        <option value="KLIC Courses">KLIC Courses</option>
+                        <option value="Adv. Excel">Adv. Excel</option>
+                        <option value="MS-Office">MS-Office</option>
+                        <option value="Tally Prime & Advance Tally">Tally Prime & Advance Tally</option>
+                        <option value="UDFA (without MS-CIT)">UDFA (without MS-CIT)</option>
+                        <option value="UDFA with MS-CIT">UDFA with MS-CIT</option>
+                        <option value="Power BI">Power BI</option>
+                        <option value="Graphics Designing">Graphics Designing (Coreldraw, Photoshop)</option>
+                        <option value="Advance Graphics Designing">Advance Graphics Designing</option>
+                        <option value="Coreldraw">Coreldraw</option>
+                        <option value="Photoshop">Photoshop</option>
+                        <option value="Indesign">Indesign</option>
+                        <option value="Illustrator">Illustrator</option>
+                        <option value="UDCA - Diploma Course">UDCA - Diploma Course</option>
+                        <option value="UCOA - Advance UDFA with Power-BI">UCOA - Advance UDFA with Power-BI</option>
+                        <option value="UDFA - Advanced">UDFA - Advanced</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2">Status</label>
+                    <select id="studentStatus" class="w-full border p-2 rounded" required>
+                        <option value="Running">Running</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Hold">Hold</option>
+                        <option value="Left">Left</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('studentModal')" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student to Batch Modal -->
+    <div id="batchModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md mx-auto mt-20">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Add Student to Batch</h2>
+                <button onclick="closeModal('batchModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <form id="batchStudentForm" onsubmit="addStudentToBatch(event)">
+                <input type="hidden" id="batchStudentIndex">
+                <div class="mb-4">
+                    <label class="block mb-2">Select Student</label>
+                    <select id="batchStudentSelect" class="w-full border p-2 rounded" required onchange="updateCourseFromStudent()">
+                        <option value="">Select a student</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2">Course</label>
+                    <input type="text" id="batchStudentCourse" class="w-full border p-2 rounded" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2">Topic</label>
+                    <select id="batchStudentTopic" class="w-full border p-2 rounded" required>
+                        <option value="BASIC">BASIC</option>
+                        <option value="WORD">WORD</option>
+                        <option value="EXCEL">EXCEL</option>
+                        <option value="POWERPOINT">POWERPOINT</option>
+                        <option value="INTERNET">INTERNET</option>
+                        <option value="ADV EXCEL">ADV EXCEL</option>
+                        <option value="BASIC TALLY">BASIC TALLY</option>
+                        <option value="ADV TALLY">ADV TALLY</option>
+                        <option value="CORELDRAW">CORELDRAW</option>
+                        <option value="PHOTOSHOP">PHOTOSHOP</option>
+                        <option value="INDESING">INDESING</option>
+                        <option value="ILLUSTARTOR">ILLUSTRATOR</option>
+                        <option value="POWERBI">POWERBI</option>
+                        <option value="LEAVE">LEAVE</option>
+                        <option value="HOLD">HOLD</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2">Faculty</label>
+                    <select id="batchStudentFaculty" class="w-full border p-2 rounded" required>
+                        <option value="SAGAR SIR">SAGAR SIR</option>
+                        <option value="KAUSAR MAM">KAUSAR MAM</option>
+                        <option value="SOURAV SIR">SOURAV SIR</option>
+                        <option value="AKSHAY SIR">AKSHAY SIR</option>
+                        <option value="Other Faculty">Other Faculty</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('batchModal')" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let students = [];
+        let batches = {};
+        let attendance = {};
+        let nextStudentId = 1401;
+
+        // Initialize Functions
+        function init() {
+            renderStudentTable();
+        }
+
+        // Tab Navigation Functions
+        function showTab(tab) {
+            document.getElementById('studentSection').classList.toggle('hidden', tab !== 'student');
+            document.getElementById('batchSection').classList.toggle('hidden', tab !== 'batch');
+            document.getElementById('attendanceSection').classList.toggle('hidden', tab !== 'attendance');
+            
+            document.getElementById('studentTab').classList.toggle('active-tab', tab === 'student');
+            document.getElementById('batchTab').classList.toggle('active-tab', tab === 'batch');
+            document.getElementById('attendanceTab').classList.toggle('active-tab', tab === 'attendance');
+            
+            if (tab === 'batch') {
+                loadSelectedBatch();
+            }
+            
+            if (tab === 'attendance') {
+                loadBatchForAttendance();
+            }
+        }
+
+        // Modal Functions
+        function openAddStudentModal() {
+            document.getElementById('modalTitle').textContent = 'Add Student';
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentId').value = '';
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        function openEditStudentModal(index) {
+            const student = students[index];
+            document.getElementById('modalTitle').textContent = 'Edit Student';
+            document.getElementById('studentId').value = index;
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('studentCourse').value = student.course;
+            document.getElementById('studentStatus').value = student.status;
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        function openAddToBatchModal() {
+            document.getElementById('batchStudentForm').reset();
+            document.getElementById('batchStudentIndex').value = '';
+            populateStudentDropdown();
+            document.getElementById('batchModal').style.display = 'block';
+        }
+
+        function openEditBatchStudentModal(batchName, index) {
+            const batchStudent = batches[batchName][index];
+            document.getElementById('batchStudentIndex').value = index;
+            populateStudentDropdown();
+            document.getElementById('batchStudentSelect').value = batchStudent.studentId;
+            document.getElementById('batchStudentCourse').value = batchStudent.course;
+            document.getElementById('batchStudentTopic').value = batchStudent.topic;
+            document.getElementById('batchStudentFaculty').value = batchStudent.faculty;
+            document.getElementById('batchModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Student Management Functions
+        function saveStudent(event) {
+            event.preventDefault();
+            const studentIdIndex = document.getElementById('studentId').value;
+            const student = {
+                id: studentIdIndex === '' ? nextStudentId++ : students[studentIdIndex].id,
+                name: document.getElementById('studentName').value,
+                course: document.getElementById('studentCourse').value,
+                status: document.getElementById('studentStatus').value
+            };
+
+            if (studentIdIndex === '') {
+                students.push(student);
+            } else {
+                students[parseInt(studentIdIndex)] = student;
+            }
+
+            closeModal('studentModal');
+            renderStudentTable();
+        }
+
+        function deleteStudent(index) {
+            if (confirm('Are you sure you want to delete this student?')) {
+                // Check if student exists in any batch
+                const studentId = students[index].id;
+                let studentInBatch = false;
+                
+                Object.keys(batches).forEach(batchName => {
+                    if (batches[batchName].some(bs => bs.studentId === studentId)) {
+                        studentInBatch = true;
+                    }
+                });
+                
+                if (studentInBatch) {
+                    alert('Student cannot be deleted as they are assigned to a batch. Remove from batch first.');
+                    return;
+                }
+                
+                students.splice(index, 1);
+                renderStudentTable();
+            }
+        }
+
+        function renderStudentTable() {
+            const tbody = document.getElementById('studentTable');
+            tbody.innerHTML = '';
+            
+            // Get filter values
+            const courseFilter = document.getElementById('courseFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            // Filter students based on selected filters
+            const filteredStudents = students.filter(student => {
+                const courseMatch = !courseFilter || student.course === courseFilter;
+                const statusMatch = !statusFilter || student.status === statusFilter;
+                return courseMatch && statusMatch;
+            });
+            
+            filteredStudents.forEach((student, index) => {
+                const actualIndex = students.findIndex(s => s.id === student.id);
+                
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-2">${student.id}</td>
+                    <td class="p-2">${student.name}</td>
+                    <td class="p-2">${student.course}</td>
+                    <td class="p-2">
+                        <span class="px-2 py-1 rounded text-xs ${statusBadgeColor(student.status)}">
+                            ${student.status}
+                        </span>
+                    </td>
+                    <td class="p-2">
+                        <button onclick="openEditStudentModal(${actualIndex})" class="text-blue-500 hover:text-blue-700">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button onclick="deleteStudent(${actualIndex})" class="text-red-500 hover:text-red-700 ml-2">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function statusBadgeColor(status) {
+            switch(status) {
+                case 'Running':
+                    return 'bg-green-100 text-green-800';
+                case 'Completed':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Hold':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Left':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        function applyFilters() {
+            renderStudentTable();
+        }
+
+        // Batch Management Functions
+        function populateStudentDropdown() {
+            const select = document.getElementById('batchStudentSelect');
+            select.innerHTML = '<option value="">Select a student</option>';
+            
+            students.forEach(student => {
+                if (student.status === 'Running') {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.id} - ${student.name}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+        
+        function updateCourseFromStudent() {
+            const studentId = document.getElementById('batchStudentSelect').value;
+            if (!studentId) return;
+            
+            const student = students.find(s => s.id == studentId);
+            if (student) {
+                document.getElementById('batchStudentCourse').value = student.course;
+            }
+        }
+
+        function loadSelectedBatch() {
+            const batchName = document.getElementById('batchSelect').value;
+            
+            // Initialize batch if it doesn't exist
+            if (!batches[batchName]) {
+                batches[batchName] = [];
+            }
+            
+            renderBatchStudentsTable(batchName);
+        }
+
+        function addStudentToBatch(event) {
+            event.preventDefault();
+            
+            const batchName = document.getElementById('batchSelect').value;
+            const studentId = parseInt(document.getElementById('batchStudentSelect').value);
+            const index = document.getElementById('batchStudentIndex').value;
+            const student = students.find(s => s.id === studentId);
+            
+            if (!student) {
+                alert('Please select a valid student');
+                return;
+            }
+            
+            const batchStudent = {
+                studentId: studentId,
+                name: student.name,
+                course: student.course,
+                topic: document.getElementById('batchStudentTopic').value,
+                faculty: document.getElementById('batchStudentFaculty').value
+            };
+            
+            // Initialize batch if it doesn't exist
+            if (!batches[batchName]) {
+                batches[batchName] = [];
+            }
+            
+            if (index === '') {
+                // Check if student is already in this batch
+                if (batches[batchName].some(bs => bs.studentId === studentId)) {
+                    alert('This student is already in this batch');
+                    return;
+                }
+                batches[batchName].push(batchStudent);
+            } else {
+                batches[batchName][parseInt(index)] = batchStudent;
+            }
+            
+            closeModal('batchModal');
+            renderBatchStudentsTable(batchName);
+        }
+
+        function deleteBatchStudent(batchName, index) {
+            if (confirm('Are you sure you want to remove this student from the batch?')) {
+                batches[batchName].splice(index, 1);
+                renderBatchStudentsTable(batchName);
+            }
+        }
+
+        function renderBatchStudentsTable(batchName) {
+            const tbody = document.getElementById('batchStudentsTable');
+            tbody.innerHTML = '';
+            
+            if (!batches[batchName]) return;
+            
+            batches[batchName].forEach((batchStudent, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-2">${index + 1}</td>
+                    <td class="p-2">${batchStudent.studentId}</td>
+                    <td class="p-2">${batchStudent.name}</td>
+                    <td class="p-2">${batchStudent.course}</td>
+                    <td class="p-2">${batchStudent.topic}</td>
+                    <td class="p-2">${batchStudent.faculty}</td>
+                    <td class="p-2">
+                        <button onclick="openEditBatchStudentModal('${batchName}', ${index})" class="text-blue-500 hover:text-blue-700">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button onclick="deleteBatchStudent('${batchName}', ${index})" class="text-red-500 hover:text-red-700 ml-2">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Attendance Functions
+        function loadBatchForAttendance() {
+            const batchName = document.getElementById('attendanceBatchSelect').value;
+            renderAttendanceTable(batchName);
+        }
+
+        function renderAttendanceTable(batchName) {
+            const tbody = document.getElementById('attendanceTable');
+            tbody.innerHTML = '';
+            
+            if (!batches[batchName] || batches[batchName].length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">No students in this batch</td></tr>`;
+                return;
+            }
+            
+            const date = document.getElementById('attendanceDate').value;
+            
+            batches[batchName].forEach((batchStudent) => {
+                const tr = document.createElement('tr');
+                const isPresent = date && attendance[date] && attendance[date][batchName] && 
+                                  attendance[date][batchName][batchStudent.studentId];
+                
+                tr.innerHTML = `
+                    <td class="p-2">${batchStudent.studentId}</td>
+                    <td class="p-2">${batchStudent.name}</td>
+                    <td class="p-2">${batchStudent.course}</td>
+                    <td class="p-2">${batchStudent.topic}</td>
+                    <td class="p-2">
+                        <input type="checkbox" class="attendance-checkbox w-5 h-5" 
+                               data-student-id="${batchStudent.studentId}"
+                               ${isPresent ? 'checked' : ''}>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const batchName = document.getElementById('attendanceBatchSelect').value;
+            
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+            
+            if (!batches[batchName] || batches[batchName].length === 0) {
+                alert('No students in this batch');
+                return;
+            }
+            
+            // Initialize attendance structure if needed
+            if (!attendance[date]) attendance[date] = {};
+            if (!attendance[date][batchName]) attendance[date][batchName] = {};
+            
+            const checkboxes = document.querySelectorAll('.attendance-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                const studentId = parseInt(checkbox.dataset.studentId);
+                attendance[date][batchName][studentId] = checkbox.checked;
+            });
+            
+            alert('Attendance saved successfully!');
+        }
+
+        // Initialize the application
+        init();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
